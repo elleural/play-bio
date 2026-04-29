@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "play-bio",
+    "slug": "play-bio",
+    "version": "0.1.0",
+    "orientation": "landscape",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "requireFullScreen": true,
+      "bundleIdentifier": "com.playbio.prototype",
+      "infoPlist": {
+        "UISupportedInterfaceOrientations": [
+          "UIInterfaceOrientationLandscapeLeft",
+          "UIInterfaceOrientationLandscapeRight"
+        ],
+        "UISupportedInterfaceOrientations~ipad": [
+          "UIInterfaceOrientationLandscapeLeft",
+          "UIInterfaceOrientationLandscapeRight"
+        ]
+      }
+    },
+    "android": {
+      "package": "com.playbio.prototype"
+    },
+    "plugins": [
+      "expo-screen-orientation",
+      "expo-asset"
+    ],
+    "experiments": {
+      "tsconfigPaths": true
+    }
+  }
+}
