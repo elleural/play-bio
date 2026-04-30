@@ -15,13 +15,11 @@ import {
 } from "../types";
 import { layout, palette, typography } from "../theme";
 import { Card } from "../components/Card";
-import { Callout } from "../components/Callout";
 import { PrimaryButton } from "../components/PrimaryButton";
 import { BaseGlyph } from "../components/BaseGlyph";
 import { AminoAcidToken } from "../components/AminoAcidToken";
 import { newLevelDraft, recordError } from "../store";
 import {
-  AMINO_ACIDS,
   AminoAcidId,
   chunkCodons,
   classifyMutation,
@@ -117,6 +115,16 @@ export const MutationEffectLevel: React.FC<Props> = ({
     if (o === expectedOutcome) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setSolved(true);
+      // Auto-advance to the level success panel.
+      setTimeout(() => {
+        const r: LevelResult = {
+          ...draftRef.current,
+          durationMs: Date.now() - startedAtRef.current,
+          hintsUsed: hintIndex + 1 > 0 ? hintIndex + 1 : 0,
+          completed: true,
+        };
+        onComplete(r);
+      }, 700);
     } else {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       draftRef.current = recordError(
@@ -124,16 +132,6 @@ export const MutationEffectLevel: React.FC<Props> = ({
         "wrong-mutation-label" as ErrorKind
       );
     }
-  };
-
-  const finish = () => {
-    const result: LevelResult = {
-      ...draftRef.current,
-      durationMs: Date.now() - startedAtRef.current,
-      hintsUsed: hintIndex + 1 > 0 ? hintIndex + 1 : 0,
-      completed: true,
-    };
-    onComplete(result);
   };
 
   const bothRun = origRun !== null && mutRun !== null;
@@ -229,21 +227,6 @@ export const MutationEffectLevel: React.FC<Props> = ({
         </View>
       ) : null}
 
-      {solved && (
-        <View style={styles.continueScrim}>
-          <View style={styles.continuePanel}>
-            <Callout
-              figure="Lab note"
-              title={`${expectedOutcome.charAt(0).toUpperCase()}${expectedOutcome.slice(1)} mutation`}
-              body={`${level.successDebrief}\n\n${OUTCOME_LABELS.find((o) => o.id === expectedOutcome)?.help ?? ""}`}
-              tone="success"
-            />
-            <View style={styles.continueActions}>
-              <PrimaryButton label="Continue" onPress={finish} />
-            </View>
-          </View>
-        </View>
-      )}
     </View>
   );
 };
@@ -458,28 +441,5 @@ const styles = StyleSheet.create({
     ...typography.body,
     fontSize: 13,
     flexShrink: 1,
-  },
-  continueScrim: {
-    ...StyleSheet.absoluteFillObject,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(31,42,54,0.35)",
-    padding: 24,
-    zIndex: 50,
-    elevation: 10,
-  },
-  continuePanel: {
-    backgroundColor: palette.panel,
-    borderRadius: layout.cardRadius,
-    padding: 18,
-    gap: 12,
-    borderWidth: 1,
-    borderColor: palette.rule,
-    width: "100%",
-    maxWidth: 720,
-  },
-  continueActions: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
   },
 });

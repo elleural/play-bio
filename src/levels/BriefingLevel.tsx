@@ -120,6 +120,11 @@ export const BriefingLevel: React.FC<Props> = ({ level, onComplete }) => {
   });
   const [swappedCount, setSwappedCount] = useState(0);
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
+  // Once the nucleotide is fully assembled, we show a non-blocking
+  // completion overlay. Swap mode lets the player optionally drop a
+  // different base to see that the backbone stays the same. The level
+  // is "ready to continue" the moment assembly is complete.
+  const [swapMode, setSwapMode] = useState(false);
   const startedAtRef = useRef<number>(Date.now());
   const draftRef = useRef<LevelResult>(newLevelDraft(level.id));
 
@@ -144,7 +149,11 @@ export const BriefingLevel: React.FC<Props> = ({ level, onComplete }) => {
     (placed.base ? 1 : 0);
   const meterValue = placedCount / 3;
   const fullyAssembled = placed.phosphate && placed.sugar && placed.base !== null;
-  const readyToContinue = fullyAssembled && swappedCount >= 1;
+  // Required objective is just to assemble the nucleotide. The base swap is
+  // optional and triggered explicitly by the player from the completion
+  // overlay; it is no longer a hidden gate that blocks Continue.
+  const readyToContinue = fullyAssembled;
+  const showOverlay = fullyAssembled && !swapMode;
 
   const handleDrop = (kind: PartKind, base: Base | null) =>
     (dropX: number, dropY: number) => {
@@ -220,18 +229,22 @@ export const BriefingLevel: React.FC<Props> = ({ level, onComplete }) => {
         setPlaced((s) => ({ ...s, base }));
         if (wasPlaced && !wasSame) {
           setSwappedCount((c) => c + 1);
+          // The player just performed an optional swap; leave swap mode and
+          // re-show the completion overlay with an updated note.
+          setSwapMode(false);
           setFeedback({
             msg: `Base swapped to ${baseFullName(base)}. The backbone stayed the same; only the information changed.`,
             tone: "success",
           });
         } else if (wasPlaced && wasSame) {
+          setSwapMode(false);
           setFeedback({
-            msg: `${baseFullName(base)} is already in place. Try a different base to see the information change.`,
+            msg: `${baseFullName(base)} is already in place.`,
             tone: "info",
           });
         } else {
           setFeedback({
-            msg: `${baseFullName(base)} attached. Different bases carry different information.`,
+            msg: `${baseFullName(base)} attached. Nucleotide complete.`,
             tone: "success",
           });
         }
@@ -358,14 +371,16 @@ export const BriefingLevel: React.FC<Props> = ({ level, onComplete }) => {
             </View>
           </View>
 
-          {/* Tray parts: phosphate and sugar are single-use; bases stay
-              available so the player can swap. Once installed, the slot
-              shows an "installed" indicator instead of a draggable. */}
+          {/* Tray parts. Phosphate and sugar are single-use: once installed,
+              the tray slot becomes a passive "installed" indicator so no
+              duplicate draggable can drift over the assembly pad.
+              Bases are draggable only while building or while the player
+              has explicitly entered swap mode from the completion overlay. */}
           {placed.phosphate ? (
             <InstalledSlot
               position={layoutCalc.trayPhosphate}
               size={layoutCalc.partSize}
-              label="phosphate installed"
+              label="installed"
             >
               <PhosphateGlyph size={48} faded />
             </InstalledSlot>
@@ -384,7 +399,7 @@ export const BriefingLevel: React.FC<Props> = ({ level, onComplete }) => {
             <InstalledSlot
               position={layoutCalc.traySugar}
               size={layoutCalc.partSize}
-              label="sugar installed"
+              label="installed"
             >
               <SugarGlyph size={52} faded />
             </InstalledSlot>
@@ -399,21 +414,18 @@ export const BriefingLevel: React.FC<Props> = ({ level, onComplete }) => {
               <SugarGlyph size={52} />
             </DraggablePart>
           )}
-          {/* Bases stay draggable until the level is complete; once the
-              success panel appears we collapse the tray to a static row so
-              no draggable can float above the overlay. */}
-          {readyToContinue
-            ? BASES_TRAY.map((b) => (
-                <InstalledSlot
-                  key={`tray-${b}-locked`}
-                  position={layoutCalc.trayBases[b]}
-                  size={layoutCalc.partSize}
-                  label={b === placed.base ? "in slot" : "not used"}
-                >
-                  <BaseGlyph base={b} size={layoutCalc.partSize} faded />
-                </InstalledSlot>
-              ))
-            : BASES_TRAY.map((b) => (
+          {BASES_TRAY.map((b) => {
+            const isPlacedBase = placed.base === b;
+            // Before assembly: every base is draggable.
+            // After assembly, normally: every base is locked in the tray
+            // and the placed base shows "in slot".
+            // After assembly + swap mode: the four bases are draggable, but
+            // the currently placed base is a static indicator so no
+            // duplicate of it can appear over the assembly pad.
+            const baseIsActive =
+              (!fullyAssembled || swapMode) && !(swapMode && isPlacedBase);
+            if (baseIsActive) {
+              return (
                 <DraggablePart
                   key={`tray-${b}`}
                   targetX={layoutCalc.trayBases[b].x}
@@ -423,7 +435,19 @@ export const BriefingLevel: React.FC<Props> = ({ level, onComplete }) => {
                 >
                   <BaseGlyph base={b} size={layoutCalc.partSize} />
                 </DraggablePart>
-              ))}
+              );
+            }
+            return (
+              <InstalledSlot
+                key={`tray-${b}-locked`}
+                position={layoutCalc.trayBases[b]}
+                size={layoutCalc.partSize}
+                label={isPlacedBase ? "in slot" : "not used"}
+              >
+                <BaseGlyph base={b} size={layoutCalc.partSize} faded />
+              </InstalledSlot>
+            );
+          })}
 
           {/* Tray labels above each part */}
           <TrayCaption
@@ -470,19 +494,54 @@ export const BriefingLevel: React.FC<Props> = ({ level, onComplete }) => {
         </View>
       ) : null}
 
-      {/* Continue panel: rendered last and elevated so nothing else can
-          float above it. The semi-transparent backdrop also captures any
-          stray taps so the underlying tray is fully inert. */}
-      {readyToContinue && (
+      {/* Swap-mode hint: light banner instead of full overlay so the
+          assembly pad stays visible while the player drops a different base. */}
+      {fullyAssembled && swapMode && (
+        <View style={styles.swapBanner}>
+          <Text style={styles.swapBannerText}>
+            Swap mode: drag any other base onto the base socket. Or
+          </Text>
+          <PrimaryButton
+            label="Skip swap and continue"
+            variant="secondary"
+            onPress={finish}
+          />
+        </View>
+      )}
+
+      {/* Completion overlay: appears as soon as the nucleotide is fully
+          assembled. Continue is the only required action; trying a
+          different base is offered as an optional experiment. The scrim
+          captures pointer events and sits above any draggable layer. */}
+      {showOverlay && (
         <View style={styles.continueScrim}>
           <View style={styles.continuePanel}>
             <Callout
               figure="Lab note"
               title="You built a nucleotide"
-              body={level.successDebrief}
+              body={
+                swappedCount > 0
+                  ? `${level.successDebrief}\n\nYou also saw that swapping the base changes the information without changing the backbone.`
+                  : level.successDebrief
+              }
               tone="success"
             />
             <View style={styles.continueActions}>
+              <PrimaryButton
+                label={
+                  swappedCount > 0
+                    ? "Try another base"
+                    : "Optional: try a different base"
+                }
+                variant="secondary"
+                onPress={() => {
+                  setSwapMode(true);
+                  setFeedback({
+                    msg: "Drag any other base onto the base socket. The backbone will stay the same.",
+                    tone: "info",
+                  });
+                }}
+              />
               <PrimaryButton label="Continue to the lab" onPress={finish} />
             </View>
           </View>
@@ -758,5 +817,29 @@ const styles = StyleSheet.create({
   continueActions: {
     flexDirection: "row",
     justifyContent: "flex-end",
+    gap: 10,
+    flexWrap: "wrap",
+  },
+  swapBanner: {
+    position: "absolute",
+    top: 8,
+    left: 16,
+    right: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: palette.hintSoft,
+    borderColor: palette.hint,
+    borderWidth: 1,
+    borderRadius: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    zIndex: 30,
+  },
+  swapBannerText: {
+    ...typography.body,
+    fontSize: 13,
+    color: palette.ink,
+    flex: 1,
   },
 });

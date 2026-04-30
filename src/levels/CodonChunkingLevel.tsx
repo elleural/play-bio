@@ -10,16 +10,14 @@ import * as Haptics from "expo-haptics";
 import {
   Base,
   CodonLevelDef,
-  ErrorKind,
   LevelResult,
 } from "../types";
 import { layout, palette, typography } from "../theme";
 import { Card } from "../components/Card";
-import { Callout } from "../components/Callout";
 import { PrimaryButton } from "../components/PrimaryButton";
 import { BaseGlyph } from "../components/BaseGlyph";
 import { StabilityMeter } from "../components/StabilityMeter";
-import { newLevelDraft, recordError } from "../store";
+import { newLevelDraft } from "../store";
 
 interface Props {
   level: CodonLevelDef;
@@ -73,8 +71,20 @@ export const CodonChunkingLevel: React.FC<Props> = ({
     if (allValid && !solved) {
       setSolved(true);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      // Auto-advance to the level success panel (LevelScreen) without an
+      // intermediate per-level overlay that the player has to dismiss.
+      const t = setTimeout(() => {
+        const r: LevelResult = {
+          ...draftRef.current,
+          durationMs: Date.now() - startedAtRef.current,
+          hintsUsed: hintIndex + 1 > 0 ? hintIndex + 1 : 0,
+          completed: true,
+        };
+        onComplete(r);
+      }, 600);
+      return () => clearTimeout(t);
     }
-  }, [allValid, solved]);
+  }, [allValid, solved, hintIndex, onComplete]);
 
   const toggleCut = (boundary: number) => {
     if (solved) return;
@@ -98,24 +108,6 @@ export const CodonChunkingLevel: React.FC<Props> = ({
     for (let i = 3; i < mRNA.length; i += 3) next.add(i);
     setCuts(next);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-  };
-
-  const reportFrameError = () => {
-    draftRef.current = recordError(
-      draftRef.current,
-      "wrong-frame" as ErrorKind
-    );
-  };
-
-  const finish = () => {
-    if (!allValid) reportFrameError();
-    const result: LevelResult = {
-      ...draftRef.current,
-      durationMs: Date.now() - startedAtRef.current,
-      hintsUsed: hintIndex + 1 > 0 ? hintIndex + 1 : 0,
-      completed: true,
-    };
-    onComplete(result);
   };
 
   const meterValue = Math.min(1, correctCount / Math.max(totalCodons, 1));
@@ -242,21 +234,6 @@ export const CodonChunkingLevel: React.FC<Props> = ({
         </View>
       ) : null}
 
-      {solved && (
-        <View style={styles.continueScrim}>
-          <View style={styles.continuePanel}>
-            <Callout
-              figure="Lab note"
-              title={`Reading frame locked: ${totalCodons} codons`}
-              body={level.successDebrief}
-              tone="success"
-            />
-            <View style={styles.continueActions}>
-              <PrimaryButton label="Continue" onPress={finish} />
-            </View>
-          </View>
-        </View>
-      )}
     </View>
   );
 };
@@ -412,28 +389,5 @@ const styles = StyleSheet.create({
     ...typography.body,
     fontSize: 13,
     flexShrink: 1,
-  },
-  continueScrim: {
-    ...StyleSheet.absoluteFillObject,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(31,42,54,0.35)",
-    padding: 24,
-    zIndex: 50,
-    elevation: 10,
-  },
-  continuePanel: {
-    backgroundColor: palette.panel,
-    borderRadius: layout.cardRadius,
-    padding: 18,
-    gap: 12,
-    borderWidth: 1,
-    borderColor: palette.rule,
-    width: "100%",
-    maxWidth: 720,
-  },
-  continueActions: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
   },
 });

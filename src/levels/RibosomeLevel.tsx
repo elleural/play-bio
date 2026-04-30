@@ -22,8 +22,6 @@ import {
 } from "../types";
 import { layout, palette, typography } from "../theme";
 import { Card } from "../components/Card";
-import { Callout } from "../components/Callout";
-import { PrimaryButton } from "../components/PrimaryButton";
 import { BaseGlyph } from "../components/BaseGlyph";
 import { AminoAcidToken } from "../components/AminoAcidToken";
 import { StabilityMeter } from "../components/StabilityMeter";
@@ -132,6 +130,16 @@ export const RibosomeLevel: React.FC<Props> = ({
       if (aa === "STOP" || nextPos >= codons.length) {
         setSolved(true);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        // Auto-advance to the level success panel; no extra dismissal step.
+        setTimeout(() => {
+          const r: LevelResult = {
+            ...draftRef.current,
+            durationMs: Date.now() - startedAtRef.current,
+            hintsUsed: hintIndex + 1 > 0 ? hintIndex + 1 : 0,
+            completed: true,
+          };
+          onComplete(r);
+        }, 600);
       } else {
         setPosition(nextPos);
       }
@@ -151,16 +159,6 @@ export const RibosomeLevel: React.FC<Props> = ({
       );
       draftRef.current = recordError(draftRef.current, "wrong-codon" as ErrorKind);
     }
-  };
-
-  const finish = () => {
-    const result: LevelResult = {
-      ...draftRef.current,
-      durationMs: Date.now() - startedAtRef.current,
-      hintsUsed: hintIndex + 1 > 0 ? hintIndex + 1 : 0,
-      completed: true,
-    };
-    onComplete(result);
   };
 
   const meter = solved ? 1 : position / Math.max(codons.length, 1);
@@ -296,21 +294,6 @@ export const RibosomeLevel: React.FC<Props> = ({
         </View>
       ) : null}
 
-      {solved && (
-        <View style={styles.continueScrim}>
-          <View style={styles.continuePanel}>
-            <Callout
-              figure="Lab note"
-              title="Polypeptide complete"
-              body={level.successDebrief}
-              tone="success"
-            />
-            <View style={styles.continueActions}>
-              <PrimaryButton label="Continue" onPress={finish} />
-            </View>
-          </View>
-        </View>
-      )}
     </View>
   );
 };
@@ -520,28 +503,5 @@ const styles = StyleSheet.create({
     ...typography.body,
     fontSize: 13,
     flexShrink: 1,
-  },
-  continueScrim: {
-    ...StyleSheet.absoluteFillObject,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(31,42,54,0.35)",
-    padding: 24,
-    zIndex: 50,
-    elevation: 10,
-  },
-  continuePanel: {
-    backgroundColor: palette.panel,
-    borderRadius: layout.cardRadius,
-    padding: 18,
-    gap: 12,
-    borderWidth: 1,
-    borderColor: palette.rule,
-    width: "100%",
-    maxWidth: 720,
-  },
-  continueActions: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
   },
 });

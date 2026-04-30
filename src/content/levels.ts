@@ -6,7 +6,7 @@ export const LEVELS: LevelDef[] = [
     id: "brief-1",
     title: "Build a nucleotide",
     brief:
-      "Drag the parts from the tray onto the matching dashed targets to build a nucleotide. Then try a different base to see what changes.",
+      "Drag a phosphate, a sugar, and a base into the assembly pad to build one nucleotide.",
     conceptIds: ["nucleotide", "backbone"],
     successDebrief:
       "A nucleotide is sugar + phosphate + base. The sugar and phosphate form the backbone; the base carries the information. Swapping the base changes what the nucleotide says without changing the backbone.",
@@ -17,7 +17,7 @@ export const LEVELS: LevelDef[] = [
     id: "discover-pairing",
     title: "Bond chamber",
     brief:
-      "Find a stable partner for each fixed base. Try candidates freely; only stable pairs lock in.",
+      "Test each candidate base against the fixed one. Lock in the partner that forms a stable bond.",
     steps: [
       {
         fixedBase: "A",
@@ -46,7 +46,7 @@ export const LEVELS: LevelDef[] = [
     id: "build-dna",
     title: "Polymerase run: build DNA",
     brief:
-      "DNA polymerase needs to copy this template. Tap A, T, G, or C to feed a nucleotide. Only correct pairs stick.",
+      "Feed the polymerase the right base for each template position. Wrong bases bounce off.",
     template: ["G", "A", "T", "C", "A", "G"],
     trayPool: ["A", "T", "G", "C"],
     productKind: "DNA",
@@ -65,7 +65,7 @@ export const LEVELS: LevelDef[] = [
     id: "repair-mismatches",
     title: "Proofreading run",
     brief:
-      "Replication finished, but the polymerase missed some errors. Find each position where the strands do not pair, and replace it.",
+      "Find each mismatched position on the new strand and replace it with the base that actually pairs.",
     template: ["G", "C", "T", "A", "G", "T", "C"],
     startingProduct: ["C", "G", "T", "T", "C", "A", "G"],
     errorPositions: [2, 4],
@@ -84,7 +84,7 @@ export const LEVELS: LevelDef[] = [
     id: "discover-rna",
     title: "RNA lab: meet uracil",
     brief:
-      "RNA is a different molecule from DNA. It uses a fourth base called uracil (U). Find the RNA partners for these template bases.",
+      "Find the RNA partner for each fixed base. Watch for the new base that replaces thymine.",
     steps: [
       {
         fixedBase: "A",
@@ -113,7 +113,7 @@ export const LEVELS: LevelDef[] = [
     id: "build-rna",
     title: "Transcription run: build RNA",
     brief:
-      "RNA polymerase reads the DNA template and synthesizes an RNA transcript. Feed it bases from the RNA tray (no thymine).",
+      "Feed RNA polymerase the right RNA base for each DNA template position to synthesize the transcript.",
     template: ["T", "A", "C", "G", "A", "A", "T"],
     trayPool: ["A", "U", "G", "C"],
     productKind: "RNA",
@@ -131,7 +131,7 @@ export const LEVELS: LevelDef[] = [
     id: "build-rna-mutation",
     title: "A mutation changes the message",
     brief:
-      "A single base on the DNA template was changed. Transcribe it and see how the RNA message changes.",
+      "Transcribe this mutated DNA template into RNA and compare it to the previous transcript.",
     template: ["T", "A", "C", "G", "A", "G", "T"],
     trayPool: ["A", "U", "G", "C"],
     productKind: "RNA",
@@ -150,7 +150,7 @@ export const LEVELS: LevelDef[] = [
     id: "codon-chunking",
     title: "Find the reading frame",
     brief:
-      "The ribosome reads mRNA three bases at a time. Tap the boundaries between bases to mark each codon.",
+      "Tap the dots between bases to slice this mRNA into codons. Every codon must be 3 bases long.",
     variants: [
       { mRNA: ["A", "U", "G", "U", "U", "U", "G", "C", "U", "U", "G", "A"] },
       { mRNA: ["A", "U", "G", "G", "C", "C", "U", "U", "C", "U", "G", "A"] },
@@ -170,7 +170,7 @@ export const LEVELS: LevelDef[] = [
     id: "ribosome-run",
     title: "Ribosome workshop",
     brief:
-      "Translate each codon into the right amino acid. The codon table is on the right; tap a token to add it to the growing protein.",
+      "Translate each codon into the right amino acid. Use the codon table on the right; STOP ends the chain.",
     variants: [
       { mRNA: ["A", "U", "G", "U", "U", "U", "G", "C", "U", "U", "G", "A"] },
       { mRNA: ["A", "U", "G", "G", "C", "C", "U", "U", "C", "U", "G", "A"] },
@@ -190,7 +190,7 @@ export const LEVELS: LevelDef[] = [
     id: "mutation-effect",
     title: "What did this mutation do",
     brief:
-      "Translate the original and mutated mRNAs, then label the outcome: silent, missense, or nonsense.",
+      "Run both transcripts through the ribosome, compare the chains, then label the outcome.",
     variants: [
       {
         label: "Substitution near the middle",

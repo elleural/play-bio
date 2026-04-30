@@ -138,22 +138,52 @@ export const DebriefScreen: React.FC = () => {
       </Card>
 
       <Card>
-        <Text style={styles.sectionTitle}>How this build felt</Text>
+        <Text style={styles.sectionTitle}>Interaction bugs</Text>
         <Text style={styles.helper}>
-          Quick check on the things we changed in this iteration.
+          Anything misbehave on the iPad? Floating tiles, stuck overlays,
+          gestures that did not respond?
         </Text>
         <ConceptInput
-          prompt="Did the molecule handling feel stable and predictable, or did parts seem to float/glitch?"
-          value={conceptCheck.handling ?? ""}
-          onChange={(v) => setConceptCheck((c) => ({ ...c, handling: v }))}
+          prompt="Any bugs you noticed?"
+          value={conceptCheck.bugs ?? ""}
+          onChange={(v) => setConceptCheck((c) => ({ ...c, bugs: v }))}
         />
+      </Card>
+
+      <Card>
+        <Text style={styles.sectionTitle}>Pace and repetition</Text>
+        <Text style={styles.helper}>
+          Did anything feel too long, too short, or too similar to another
+          level?
+        </Text>
         <ConceptInput
-          prompt="Which level felt most like a game? Which felt repetitive?"
+          prompt="Which level felt most like a game? Which (if any) felt repetitive?"
           value={conceptCheck.variety ?? ""}
           onChange={(v) => setConceptCheck((c) => ({ ...c, variety: v }))}
         />
+      </Card>
+
+      <Card>
+        <Text style={styles.sectionTitle}>RNA and translation</Text>
+        <Text style={styles.helper}>
+          Quick check on the new content.
+        </Text>
         <ConceptInput
-          prompt="Should the next phase deepen RNA/transcription, move toward proteins/translation, or something else?"
+          prompt="Did the RNA arc and the ribosome workshop make sense to you?"
+          value={conceptCheck.rnaTranslation ?? ""}
+          onChange={(v) =>
+            setConceptCheck((c) => ({ ...c, rnaTranslation: v }))
+          }
+        />
+      </Card>
+
+      <Card>
+        <Text style={styles.sectionTitle}>What next</Text>
+        <Text style={styles.helper}>
+          Where do you want the game to go?
+        </Text>
+        <ConceptInput
+          prompt="Should the next phase be gene regulation (operons), genetic engineering (CRISPR/cloning), or something else?"
           value={conceptCheck.nextPhase ?? ""}
           onChange={(v) => setConceptCheck((c) => ({ ...c, nextPhase: v }))}
         />

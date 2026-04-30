@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { palette, typography } from "../theme";
 import { useSession } from "../store";
 import { LEVELS } from "../content/levels";
@@ -108,7 +108,10 @@ export const LevelScreen: React.FC = () => {
         />
 
         {result && (
-          <View style={styles.successPanel}>
+          <ScrollView
+            style={styles.successPanel}
+            contentContainerStyle={styles.successScrollContent}
+          >
             <View style={styles.successInner}>
               <Text style={styles.successKicker}>Solved</Text>
               <Text style={styles.successTitle}>{def.title}</Text>
@@ -163,7 +166,7 @@ export const LevelScreen: React.FC = () => {
                 />
               </View>
             </View>
-          </View>
+          </ScrollView>
         )}
       </View>
     </View>
@@ -272,6 +275,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "rgba(31,42,54,0.45)",
+    padding: 24,
+    // Must sit above any per-level success scrim (those use zIndex 50).
+    zIndex: 200,
+    elevation: 30,
+  },
+  successScrollContent: {
+    flexGrow: 1,
+    alignItems: "center",
+    justifyContent: "center",
     padding: 24,
   },
   successInner: {
