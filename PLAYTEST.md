@@ -1,80 +1,67 @@
-# Playtest guide — first prototype (0.2 redesign)
+# Playtest guide — fourth prototype (0.4, translation arc)
 
-This is the redesigned first iPad prototype of `play-bio`, built per [README.md](README.md). It teaches the same concepts as before, but it now scaffolds them so a player with no biology background can succeed by experimenting, not by recalling.
+This is the fourth iPad prototype of `play-bio`. It addresses the lingering "floating base" bug from the assembly screen and adds the next playable phase: translation from mRNA to a small polypeptide, including a mutation effect challenge.
+
+## What changed since 0.3
+
+- Fixed: in Level 1 (Build a nucleotide), the base tray draggables are now removed when the lab note overlay appears, and the success panel is rendered above everything else. No more bases visually floating over the success panel.
+- Added: a translation arc with three new levels (codon chunking, ribosome workshop, mutation lab).
+- Added: per-level variant rotation. Tapping **Try again** on a translation level rotates to a different sequence so replays do not repeat exactly the same content.
 
 ## What this build contains
 
 - A short Campbell-inspired session called **Molecular Systems Lab**.
-- 7 levels grouped into 4 stages:
-  1. **Briefing — Build a nucleotide** (1 level). Drag a phosphate, a sugar, and a base from the tray onto the dashed targets in the assembly pad. Try a different base after the molecule is complete to see how the backbone stays the same while the information changes.
-  2. **Discovery** (2 levels). Free-experiment bond chamber. Try candidate bases against a fixed base; bond lines and a stability meter show what is happening. Discover A-T pairing, then G-C pairing.
-  3. **Build run** (2 levels). Operate a simplified polymerase. Tap a base to feed it; correct pairs form bonds and the polymerase advances; wrong pairs shake and reduce strand stability.
-  4. **Repair** (2 levels). A proofreading station. The product strand has mismatches; tap a position to select it, then tap a replacement base.
-- An end-of-session debrief with stats, a short concept check, and a feedback form.
-- All-original placeholder visuals styled after textbook diagrams. No Campbell figures are bundled with the app.
+- 10 levels grouped into 3 stages:
+  1. **Build & replicate**
+     - Build a nucleotide.
+     - Bond chamber (multi-step: A and G).
+     - DNA polymerase build run.
+     - Proofreading run with two mismatches.
+  2. **Transcribe to RNA**
+     - RNA bond chamber (uracil).
+     - RNA polymerase transcription run.
+     - Mutation transcript change.
+  3. **Translate to protein**
+     - Codon chunking: tap boundaries to find the reading frame.
+     - Ribosome workshop: translate codons into amino acids using a small codon table; STOP ends translation.
+     - Mutation lab: translate an original and a mutated mRNA, then label the result as silent, missense, or nonsense.
 
-The biology content targets **incoming college freshman** level. Concepts referenced (Campbell 12e):
-
-- Ch 5.5: nucleotides, sugar-phosphate backbone, the four bases
-- Ch 16.1–16.2: complementary base pairing, hydrogen bonds, DNA polymerase, proofreading
-- Ch 17.5 (preview): how a missed mismatch becomes a mutation
+The biology content targets **incoming college freshman** level (Campbell 12e Ch 5, 16, 17). The translation phase deliberately uses a small subset of the genetic code so the player learns the concept without memorizing 64 codons.
 
 ## How to run on iPad
 
-You need a Mac (or any computer with Node 18+) and an iPad.
+1. `npm install` (already done if you cloned this repo).
+2. `npx expo start` (or `npx expo start --clear` after pulling new code).
+3. Open Expo Go (SDK 54) on the iPad on the same Wi-Fi.
+4. Scan the QR.
+5. Hold the iPad in landscape.
 
-1. Install dependencies (already done if you cloned this repo):
-   ```bash
-   npm install
-   ```
-2. Start the Expo dev server in this directory:
-   ```bash
-   npx expo start
-   ```
-3. On the iPad, install **Expo Go** from the App Store. Make sure it matches the Expo SDK shown in the terminal (currently SDK 54).
-4. Make sure the iPad and your Mac are on the same Wi-Fi network.
-5. Open Expo Go on the iPad and scan the QR code shown in the terminal (or in the browser tab the dev server opens).
-6. Hold the iPad in **landscape**. The app locks to landscape automatically.
+If Expo Go can't reach your Mac, use `npx expo start --tunnel`.
 
-If Expo Go cannot reach your Mac (e.g., on guest Wi-Fi), run `npx expo start --tunnel` instead.
+## How to play the new phase
 
-## How to play
+- **Codon chunking**: the mRNA is shown as a row of bases. Between each pair of bases is a small dot. Tap a dot to insert a frame cut. Goal: every codon must have exactly 3 bases. There is an **Auto-chunk** button that places cuts every 3 bases if you want to skip ahead.
+- **Ribosome workshop**: the mRNA is already chunked. The current codon is highlighted. The codon table on the right tells you what each codon codes for. Tap the matching amino acid token at the bottom to add it to the polypeptide chain. STOP ends the level.
+- **Mutation lab**: two mRNAs are shown side by side, with the differing codon highlighted. Tap **Translate** on each to run the ribosome. Compare the resulting protein chains. Then tap one of three outcome buttons: Silent, Missense, or Nonsense.
 
-- The bar at the top shows the level title, the level number, and the stage (Briefing, Discovery, Build run, Repair).
-- The body of the screen changes per stage:
-  - **Briefing**: drag parts from the right tray onto the dashed targets on the left assembly pad. Wrong drops bounce back with an explanation. After the nucleotide is fully assembled, drag a different base onto the base target to see the swap. The "Continue to the lab" button appears after a swap.
-  - **Discovery**: tap a candidate on the right to test it against the fixed base on the left. If a stable pair forms you will see hydrogen bond lines and a green stability meter; if not, you will see a wobble and a "no bond" caption. Try freely.
-  - **Build run**: tap A, T, G, or C at the bottom to feed it to the polymerase. Correct bases bond; wrong ones shake. Stability drops with wrong tries but the level is recoverable.
-  - **Repair**: tap a position on the lower strand to select it (mismatched ones are highlighted in warm orange). Then tap a base to replace it. The proofreading station closes when all positions pair correctly.
-- Tap **Hint** for a nudge. Hints do not penalize you.
-- After finishing a level, a panel summarizes what just happened, names the Campbell concepts you encountered, and shows your stats.
-- The session ends after the last level with a debrief, a short concept check, and a feedback form.
+## What feedback we want this round
 
-## What feedback we want
+- Does the floating-base bug actually feel fixed in Level 1?
+- Does the codon chunking level make the reading frame click?
+- Does the ribosome workshop feel like operating a machine, or like another quiz?
+- Does the mutation lab connect "DNA changes" to "protein changes" in a satisfying way?
+- Did variant rotation help on replays?
+- Did the session feel about the right length (10 levels, ~15 minutes)?
+- What concept feels weakest after play and should be expanded next?
 
-The redesign is meant to fix one specific problem: the first version felt like a quiz that assumed background knowledge. Watch the player and capture both behavior and direct comments.
+## Variability for replay
 
-Specifically:
-
-- Could the player figure out what to do without reading much?
-- When did the player first understand why A pairs with T and G pairs with C?
-- Did the bond visuals and stability meter help them feel they were operating a system?
-- Did the polymerase build feel more game-like than the first prototype?
-- Could the player make and recover from mistakes without frustration?
-- Did anything still feel like homework?
-- Could the player explain in their own words: what a nucleotide is, why bases pair selectively, what a mismatch is?
-- Did the content feel college-appropriate, too easy, or too jargon-heavy?
-- What felt fun enough to repeat?
-
-The end-of-session screen captures three short concept-check answers, two ratings, a yes/no replay question, and free-form notes. When the player taps **Save feedback and play again**, the responses are also printed to the Expo dev console for capture.
+Each translation level has multiple sequence variants. Each time you tap **Try again** in the success panel (or **Reset** in the HUD), the level rotates to the next variant. The first playthrough always uses the deterministic "first" variant so the learning sequence stays predictable.
 
 ## Known limitations of this build
 
-- No persistent storage. Closing the app loses session results.
-- No real audio. Haptics only.
-- Simplified molecular visuals; the polymerase is implied by a highlight, not drawn as a full enzyme.
-- Tray buttons are reusable; in real biology nucleotides are consumed by polymerase, but for the prototype we let the player experiment freely.
-- Placeholder art only. The Campbell-style diagrams are procedural; we will redraw or license real figures once the core loop is validated.
-- No transcription, regulation, CRISPR, or applied bioengineering yet. Those wait until the build/repair experience proves it can teach the basics.
-
-After feedback, we will decide whether to deepen the discovery and repair loops, change interaction style, or move into transcription as the next biology arc.
+- No persistent storage; closing the app loses session results.
+- Only a tiny subset of the genetic code is implemented (Met, Phe, Ala, Leu, Ser, Gly, STOP). Other codons would be flagged as "not in table".
+- The codon chunking level relies on simple tap interactions instead of free drag, to keep it clear.
+- No tRNA visuals yet, no protein-folding consequences, no regulation/CRISPR yet.
+- Placeholder art only.

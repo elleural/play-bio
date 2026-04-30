@@ -2,12 +2,10 @@ import React, { useEffect } from "react";
 import { StyleSheet } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
-  Easing,
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
-  withTiming,
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 
@@ -42,13 +40,17 @@ export const DraggablePart: React.FC<Props> = ({
   const lift = useSharedValue(0);
 
   useEffect(() => {
-    baseX.value = withTiming(targetX, {
-      duration: 240,
-      easing: Easing.out(Easing.cubic),
+    // Snap back / move to new home with a quick spring so misdrops do not
+    // visually linger at a wrong location.
+    baseX.value = withSpring(targetX, {
+      mass: 0.4,
+      stiffness: 320,
+      damping: 22,
     });
-    baseY.value = withTiming(targetY, {
-      duration: 240,
-      easing: Easing.out(Easing.cubic),
+    baseY.value = withSpring(targetY, {
+      mass: 0.4,
+      stiffness: 320,
+      damping: 22,
     });
   }, [targetX, targetY, baseX, baseY]);
 

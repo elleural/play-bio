@@ -121,18 +121,41 @@ export const DebriefScreen: React.FC = () => {
           onChange={(v) => setConceptCheck((c) => ({ ...c, basePairing: v }))}
         />
         <ConceptInput
-          prompt="What changes when DNA is transcribed into RNA?"
-          value={conceptCheck.transcription ?? ""}
-          onChange={(v) =>
-            setConceptCheck((c) => ({ ...c, transcription: v }))
-          }
+          prompt="Why does RNA use uracil (U) instead of thymine (T)?"
+          value={conceptCheck.rna ?? ""}
+          onChange={(v) => setConceptCheck((c) => ({ ...c, rna: v }))}
         />
         <ConceptInput
-          prompt="Why does proofreading matter?"
-          value={conceptCheck.proofreading ?? ""}
-          onChange={(v) =>
-            setConceptCheck((c) => ({ ...c, proofreading: v }))
-          }
+          prompt="In your own words, what is a codon and how does the ribosome use it?"
+          value={conceptCheck.codon ?? ""}
+          onChange={(v) => setConceptCheck((c) => ({ ...c, codon: v }))}
+        />
+        <ConceptInput
+          prompt="What is the difference between a missense and a nonsense mutation?"
+          value={conceptCheck.mutation ?? ""}
+          onChange={(v) => setConceptCheck((c) => ({ ...c, mutation: v }))}
+        />
+      </Card>
+
+      <Card>
+        <Text style={styles.sectionTitle}>How this build felt</Text>
+        <Text style={styles.helper}>
+          Quick check on the things we changed in this iteration.
+        </Text>
+        <ConceptInput
+          prompt="Did the molecule handling feel stable and predictable, or did parts seem to float/glitch?"
+          value={conceptCheck.handling ?? ""}
+          onChange={(v) => setConceptCheck((c) => ({ ...c, handling: v }))}
+        />
+        <ConceptInput
+          prompt="Which level felt most like a game? Which felt repetitive?"
+          value={conceptCheck.variety ?? ""}
+          onChange={(v) => setConceptCheck((c) => ({ ...c, variety: v }))}
+        />
+        <ConceptInput
+          prompt="Should the next phase deepen RNA/transcription, move toward proteins/translation, or something else?"
+          value={conceptCheck.nextPhase ?? ""}
+          onChange={(v) => setConceptCheck((c) => ({ ...c, nextPhase: v }))}
         />
       </Card>
 

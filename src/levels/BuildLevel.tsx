@@ -17,7 +17,7 @@ import { Nucleotide } from "../components/Nucleotide";
 import { BondLines } from "../components/BondLines";
 import { StabilityMeter } from "../components/StabilityMeter";
 import { newLevelDraft, recordError } from "../store";
-import { baseFullName, bondCount, dnaComplement } from "../game/pairing";
+import { baseFullName, bondCount, complementFor } from "../game/pairing";
 
 interface Props {
   level: BuildLevelDef;
@@ -25,7 +25,13 @@ interface Props {
   hintIndex: number;
 }
 
-const TRAY: Base[] = ["A", "T", "G", "C"];
+const trayFor = (level: BuildLevelDef): Base[] =>
+  level.productKind === "RNA"
+    ? (["A", "U", "G", "C"] as Base[])
+    : (["A", "T", "G", "C"] as Base[]);
+
+const enzymeName = (level: BuildLevelDef): string =>
+  level.productKind === "RNA" ? "RNA polymerase" : "DNA polymerase";
 
 export const BuildLevel: React.FC<Props> = ({
   level,
@@ -72,7 +78,7 @@ export const BuildLevel: React.FC<Props> = ({
     if (solved) return;
     const target = level.template[position];
     if (!target) return;
-    const expected = dnaComplement(target);
+    const expected = complementFor(level.productKind, target);
     draftRef.current = {
       ...draftRef.current,
       attempts: draftRef.current.attempts + 1,
@@ -85,7 +91,7 @@ export const BuildLevel: React.FC<Props> = ({
       const bonds = bondCount(target, b);
       setFeedbackTone("success");
       setFeedback(
-        `${baseFullName(target)} + ${baseFullName(b)} → ${bonds} hydrogen bonds. Polymerase advances.`
+        `${baseFullName(target)} + ${baseFullName(b)} → ${bonds} hydrogen bonds. ${enzymeName(level)} advances.`
       );
       const newPos = position + 1;
       setPosition(newPos);
@@ -102,14 +108,28 @@ export const BuildLevel: React.FC<Props> = ({
         withTiming(0, { duration: 60 })
       );
       setFeedbackTone("warn");
-      setFeedback(
-        `${baseFullName(b)} does not pair with ${baseFullName(target)}. Try another.`
-      );
+      // Special case: in RNA mode, T should not be in the tray, but be
+      // helpful if the player somehow tries it.
+      if (level.productKind === "RNA" && b === "T") {
+        setFeedback(
+          `RNA does not use thymine. Use uracil (U) where DNA would use T.`
+        );
+      } else {
+        setFeedback(
+          `${baseFullName(b)} does not pair with ${baseFullName(target)}. Try another.`
+        );
+      }
       const newStab = Math.max(0, stability - 0.08);
       setStability(newStab);
       draftRef.current = recordError(draftRef.current, "wrong-pair" as ErrorKind);
     }
   };
+
+  const tray = trayFor(level);
+  const productLabel =
+    level.productKind === "RNA" ? "RNA transcript" : "new DNA strand";
+  const enzymeLabel =
+    level.productKind === "RNA" ? "RNA polymerase" : "DNA polymerase";
 
   const finish = () => {
     const result: LevelResult = {
@@ -126,7 +146,7 @@ export const BuildLevel: React.FC<Props> = ({
       <View style={styles.body}>
         <Card style={styles.machineCard}>
           <View style={styles.machineHeader}>
-            <Text style={styles.machineTitle}>DNA polymerase</Text>
+            <Text style={styles.machineTitle}>{enzymeLabel}</Text>
             <Text style={styles.machineSub}>
               Position {Math.min(position + 1, level.template.length)} of {level.template.length}
             </Text>
@@ -192,7 +212,7 @@ export const BuildLevel: React.FC<Props> = ({
 
               <View style={styles.dirRow}>
                 <Text style={styles.dirTag}>5'</Text>
-                <Text style={styles.roleTag}>new product</Text>
+                <Text style={styles.roleTag}>{productLabel}</Text>
                 <Text style={styles.dirTag}>3'</Text>
               </View>
             </View>
@@ -212,10 +232,10 @@ export const BuildLevel: React.FC<Props> = ({
           />
           <View style={{ height: 12 }} />
           <Card style={{ paddingVertical: 12 }}>
-            <Text style={styles.sidebarLabel}>What polymerase wants</Text>
+            <Text style={styles.sidebarLabel}>What {enzymeLabel} wants</Text>
             <Text style={styles.sidebarBody}>
               {solved
-                ? "Strand complete."
+                ? `${productLabel} complete.`
                 : `A nucleotide that pairs with ${baseFullName(
                     level.template[position]!
                   )} (${level.template[position]}).`}
@@ -243,7 +263,7 @@ export const BuildLevel: React.FC<Props> = ({
       ) : null}
 
       <View style={styles.tray}>
-        {TRAY.map((b) => (
+        {tray.map((b) => (
           <ShakingBaseButton
             key={b}
             base={b}

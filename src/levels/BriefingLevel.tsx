@@ -358,36 +358,72 @@ export const BriefingLevel: React.FC<Props> = ({ level, onComplete }) => {
             </View>
           </View>
 
-          {/* Tray parts (draggable) */}
-          <DraggablePart
-            key="tray-phosphate"
-            targetX={layoutCalc.trayPhosphate.x}
-            targetY={layoutCalc.trayPhosphate.y}
-            size={layoutCalc.partSize}
-            onDrop={handleDrop("phosphate", null)}
-          >
-            <PhosphateGlyph size={48} />
-          </DraggablePart>
-          <DraggablePart
-            key="tray-sugar"
-            targetX={layoutCalc.traySugar.x}
-            targetY={layoutCalc.traySugar.y}
-            size={layoutCalc.partSize}
-            onDrop={handleDrop("sugar", null)}
-          >
-            <SugarGlyph size={52} />
-          </DraggablePart>
-          {BASES_TRAY.map((b) => (
-            <DraggablePart
-              key={`tray-${b}`}
-              targetX={layoutCalc.trayBases[b].x}
-              targetY={layoutCalc.trayBases[b].y}
+          {/* Tray parts: phosphate and sugar are single-use; bases stay
+              available so the player can swap. Once installed, the slot
+              shows an "installed" indicator instead of a draggable. */}
+          {placed.phosphate ? (
+            <InstalledSlot
+              position={layoutCalc.trayPhosphate}
               size={layoutCalc.partSize}
-              onDrop={handleDrop("base", b)}
+              label="phosphate installed"
             >
-              <BaseGlyph base={b} size={layoutCalc.partSize} />
+              <PhosphateGlyph size={48} faded />
+            </InstalledSlot>
+          ) : (
+            <DraggablePart
+              key="tray-phosphate"
+              targetX={layoutCalc.trayPhosphate.x}
+              targetY={layoutCalc.trayPhosphate.y}
+              size={layoutCalc.partSize}
+              onDrop={handleDrop("phosphate", null)}
+            >
+              <PhosphateGlyph size={48} />
             </DraggablePart>
-          ))}
+          )}
+          {placed.sugar ? (
+            <InstalledSlot
+              position={layoutCalc.traySugar}
+              size={layoutCalc.partSize}
+              label="sugar installed"
+            >
+              <SugarGlyph size={52} faded />
+            </InstalledSlot>
+          ) : (
+            <DraggablePart
+              key="tray-sugar"
+              targetX={layoutCalc.traySugar.x}
+              targetY={layoutCalc.traySugar.y}
+              size={layoutCalc.partSize}
+              onDrop={handleDrop("sugar", null)}
+            >
+              <SugarGlyph size={52} />
+            </DraggablePart>
+          )}
+          {/* Bases stay draggable until the level is complete; once the
+              success panel appears we collapse the tray to a static row so
+              no draggable can float above the overlay. */}
+          {readyToContinue
+            ? BASES_TRAY.map((b) => (
+                <InstalledSlot
+                  key={`tray-${b}-locked`}
+                  position={layoutCalc.trayBases[b]}
+                  size={layoutCalc.partSize}
+                  label={b === placed.base ? "in slot" : "not used"}
+                >
+                  <BaseGlyph base={b} size={layoutCalc.partSize} faded />
+                </InstalledSlot>
+              ))
+            : BASES_TRAY.map((b) => (
+                <DraggablePart
+                  key={`tray-${b}`}
+                  targetX={layoutCalc.trayBases[b].x}
+                  targetY={layoutCalc.trayBases[b].y}
+                  size={layoutCalc.partSize}
+                  onDrop={handleDrop("base", b)}
+                >
+                  <BaseGlyph base={b} size={layoutCalc.partSize} />
+                </DraggablePart>
+              ))}
 
           {/* Tray labels above each part */}
           <TrayCaption
@@ -434,17 +470,21 @@ export const BriefingLevel: React.FC<Props> = ({ level, onComplete }) => {
         </View>
       ) : null}
 
-      {/* Continue panel */}
+      {/* Continue panel: rendered last and elevated so nothing else can
+          float above it. The semi-transparent backdrop also captures any
+          stray taps so the underlying tray is fully inert. */}
       {readyToContinue && (
-        <View style={styles.continuePanel}>
-          <Callout
-            figure="Lab note"
-            title="You built a nucleotide"
-            body={level.successDebrief}
-            tone="success"
-          />
-          <View style={styles.continueActions}>
-            <PrimaryButton label="Continue to the lab" onPress={finish} />
+        <View style={styles.continueScrim}>
+          <View style={styles.continuePanel}>
+            <Callout
+              figure="Lab note"
+              title="You built a nucleotide"
+              body={level.successDebrief}
+              tone="success"
+            />
+            <View style={styles.continueActions}>
+              <PrimaryButton label="Continue to the lab" onPress={finish} />
+            </View>
           </View>
         </View>
       )}
@@ -489,6 +529,31 @@ const Zone: React.FC<{
     <View style={[styles.zoneCaption, { top: size + 6, width: size + 60, left: -30 }]}>
       <Text style={styles.zoneLabel}>{label}</Text>
       <Text style={styles.zoneSublabel}>{sublabel}</Text>
+    </View>
+  </View>
+);
+
+const InstalledSlot: React.FC<{
+  position: Vec2;
+  size: number;
+  label: string;
+  children?: React.ReactNode;
+}> = ({ position, size, label, children }) => (
+  <View
+    pointerEvents="none"
+    style={[
+      styles.installedSlot,
+      {
+        left: position.x,
+        top: position.y,
+        width: size,
+        height: size,
+      },
+    ]}
+  >
+    <View style={styles.installedInner}>{children}</View>
+    <View style={styles.installedBadge}>
+      <Text style={styles.installedBadgeText}>installed</Text>
     </View>
   </View>
 );
@@ -626,6 +691,33 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: palette.inkSoft,
   },
+  installedSlot: {
+    position: "absolute",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  installedInner: {
+    width: "100%",
+    height: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+    opacity: 0.5,
+  },
+  installedBadge: {
+    position: "absolute",
+    bottom: -8,
+    backgroundColor: palette.successSoft,
+    borderColor: palette.success,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  installedBadgeText: {
+    ...typography.caption,
+    color: palette.success,
+    fontSize: 9,
+  },
   feedback: {
     position: "absolute",
     bottom: 18,
@@ -644,17 +736,24 @@ const styles = StyleSheet.create({
     fontSize: 13,
     textAlign: "center",
   },
+  continueScrim: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(31,42,54,0.35)",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24,
+    zIndex: 50,
+    elevation: 10,
+  },
   continuePanel: {
-    position: "absolute",
-    left: 24,
-    right: 24,
-    bottom: 60,
     backgroundColor: palette.panel,
     borderRadius: layout.cardRadius,
-    padding: 16,
+    padding: 18,
     gap: 12,
     borderWidth: 1,
     borderColor: palette.rule,
+    width: "100%",
+    maxWidth: 720,
   },
   continueActions: {
     flexDirection: "row",

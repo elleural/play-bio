@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Pressable,
   StyleSheet,
@@ -31,41 +31,55 @@ interface Props {
   hintIndex: number;
 }
 
-type Trial = {
+interface Trial {
   candidate: Base;
   bonds: 0 | 2 | 3;
   caption: string;
-} | null;
+}
 
 export const DiscoveryLevel: React.FC<Props> = ({
   level,
   onComplete,
   hintIndex,
 }) => {
-  const [trial, setTrial] = useState<Trial>(null);
-  const [solved, setSolved] = useState(false);
+  const [stepIndex, setStepIndex] = useState(0);
+  const [trial, setTrial] = useState<Trial | null>(null);
   const [tested, setTested] = useState<Set<Base>>(new Set());
+  const [stepSolved, setStepSolved] = useState(false);
+  const [allSolved, setAllSolved] = useState(false);
   const draftRef = useRef<LevelResult>(newLevelDraft(level.id));
   const startedAtRef = useRef<number>(Date.now());
+
+  const step = level.steps[stepIndex];
+  const totalSteps = level.steps.length;
 
   useEffect(() => {
     draftRef.current = newLevelDraft(level.id);
     startedAtRef.current = Date.now();
+    setStepIndex(0);
     setTrial(null);
-    setSolved(false);
     setTested(new Set());
+    setStepSolved(false);
+    setAllSolved(false);
   }, [level.id]);
 
+  // Reset per-step state when moving to a new step
+  useEffect(() => {
+    setTrial(null);
+    setTested(new Set());
+    setStepSolved(false);
+  }, [stepIndex]);
+
   const onTryCandidate = (candidate: Base) => {
-    if (solved) return;
+    if (stepSolved) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const bonds = bondCount(level.fixedBase, candidate);
+    const bonds = bondCount(step.fixedBase, candidate);
     const caption =
       bonds === 0
-        ? `${baseFullName(level.fixedBase)} and ${baseFullName(
+        ? `${baseFullName(step.fixedBase)} and ${baseFullName(
             candidate
           )} cannot form stable hydrogen bonds.`
-        : `${baseFullName(level.fixedBase)} and ${baseFullName(
+        : `${baseFullName(step.fixedBase)} and ${baseFullName(
             candidate
           )} form ${bonds} hydrogen bonds.`;
     setTrial({ candidate, bonds, caption });
@@ -77,13 +91,21 @@ export const DiscoveryLevel: React.FC<Props> = ({
       attempts: draftRef.current.attempts + 1,
     };
     if (bonds > 0) {
-      setSolved(true);
+      setStepSolved(true);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } else {
       const errorKind: ErrorKind = "wrong-pair";
       draftRef.current = recordError(draftRef.current, errorKind);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
     }
+  };
+
+  const advanceStep = () => {
+    if (stepIndex + 1 >= totalSteps) {
+      setAllSolved(true);
+      return;
+    }
+    setStepIndex((i) => i + 1);
   };
 
   const finish = () => {
@@ -97,23 +119,28 @@ export const DiscoveryLevel: React.FC<Props> = ({
   };
 
   const stabilityValue = trial && trial.bonds > 0 ? trial.bonds / 3 : 0;
-  const stabilityHint = trial
-    ? trial.bonds === 0
-      ? "No stable bonds at this position."
-      : `${trial.bonds} of a possible 3 hydrogen bonds.`
-    : "Try a candidate to see what happens.";
+  const stabilityHint = useMemo(() => {
+    if (!trial) return "Tap a candidate at the right to test it.";
+    if (trial.bonds === 0) return "No stable bonds at this position.";
+    return `${trial.bonds} of a possible 3 hydrogen bonds.`;
+  }, [trial]);
 
   return (
     <View style={styles.root}>
       <View style={styles.chamberRow}>
         <View style={styles.chamberLeft}>
           <Card style={styles.chamberCard}>
-            <Text style={styles.chamberCaption}>Bond chamber</Text>
+            <View style={styles.chamberHeader}>
+              <Text style={styles.chamberCaption}>Bond chamber</Text>
+              <Text style={styles.stepCounter}>
+                Step {stepIndex + 1} of {totalSteps}
+              </Text>
+            </View>
             <View style={styles.chamberBody}>
               <View style={styles.fixedSlot}>
-                <Nucleotide base={level.fixedBase} size={84} />
+                <Nucleotide base={step.fixedBase} size={84} />
                 <Text style={styles.molLabel}>
-                  {level.fixedBase} ({baseFullName(level.fixedBase)})
+                  {step.fixedBase} ({baseFullName(step.fixedBase)})
                 </Text>
                 <Text style={styles.molSublabel}>fixed</Text>
               </View>
@@ -133,7 +160,7 @@ export const DiscoveryLevel: React.FC<Props> = ({
                   <BouncingNucleotide
                     base={trial.candidate}
                     bonded={trial.bonds > 0}
-                    key={`${trial.candidate}-${trial.bonds}-${tested.size}`}
+                    key={`${stepIndex}-${trial.candidate}-${trial.bonds}-${tested.size}`}
                   />
                 ) : (
                   <View style={styles.placeholderSlot}>
@@ -143,7 +170,9 @@ export const DiscoveryLevel: React.FC<Props> = ({
               </View>
             </View>
             <Text style={styles.captionText}>
-              {trial?.caption ?? "Tap a candidate at right to test."}
+              {stepSolved
+                ? step.partnerCaption
+                : trial?.caption ?? "Tap a candidate at right to test."}
             </Text>
           </Card>
 
@@ -159,16 +188,16 @@ export const DiscoveryLevel: React.FC<Props> = ({
 
         <View style={styles.candidatesCol}>
           <Text style={styles.candidatesHeader}>Candidates</Text>
-          {level.candidates.map((c) => {
+          {step.candidates.map((c) => {
             const wasTested = tested.has(c);
             const lastTried = trial?.candidate === c;
-            const wasFailed = wasTested && bondCount(level.fixedBase, c) === 0;
-            const wasSuccess = wasTested && bondCount(level.fixedBase, c) > 0;
+            const wasFailed = wasTested && bondCount(step.fixedBase, c) === 0;
+            const wasSuccess = wasTested && bondCount(step.fixedBase, c) > 0;
             return (
               <Pressable
-                key={c}
+                key={`${stepIndex}-${c}`}
                 onPress={() => onTryCandidate(c)}
-                disabled={solved && !lastTried}
+                disabled={stepSolved && !lastTried}
                 style={({ pressed }) => [
                   styles.candidateBtn,
                   wasFailed && styles.candidateFailed,
@@ -192,6 +221,17 @@ export const DiscoveryLevel: React.FC<Props> = ({
               </Pressable>
             );
           })}
+
+          {stepSolved && !allSolved && (
+            <View style={styles.stepCta}>
+              <PrimaryButton
+                label={
+                  stepIndex + 1 >= totalSteps ? "Wrap up" : "Next pair"
+                }
+                onPress={advanceStep}
+              />
+            </View>
+          )}
         </View>
       </View>
 
@@ -202,11 +242,11 @@ export const DiscoveryLevel: React.FC<Props> = ({
         </View>
       ) : null}
 
-      {solved && (
+      {allSolved && (
         <View style={styles.successPanel}>
           <Callout
             figure="Lab note"
-            title="Stable pair found"
+            title={`${totalSteps} stable pair${totalSteps === 1 ? "" : "s"} found`}
             body={level.successDebrief}
             tone="success"
           />
@@ -283,9 +323,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     gap: 10,
   },
+  chamberHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "baseline",
+  },
   chamberCaption: {
     ...typography.caption,
     color: palette.inkSoft,
+  },
+  stepCounter: {
+    ...typography.caption,
+    color: palette.accent,
   },
   chamberBody: {
     flexDirection: "row",
@@ -377,6 +426,10 @@ const styles = StyleSheet.create({
   candidateHint: {
     ...typography.caption,
     color: palette.inkSoft,
+  },
+  stepCta: {
+    marginTop: 8,
+    alignItems: "flex-end",
   },
   bouncingWrap: {
     width: 72,

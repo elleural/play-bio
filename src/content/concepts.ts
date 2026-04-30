@@ -73,6 +73,70 @@ export const CONCEPTS: Record<string, ConceptRef> = {
     explanation:
       "Mutations include base substitutions and small insertions or deletions. Some are silent, some change a single amino acid, and some create or destroy stop signals during translation. The first line of defense against them is correct base pairing followed by proofreading and repair.",
   },
+  codon: {
+    id: "codon",
+    name: "Codon",
+    campbellRef: "Campbell Ch 17.1, 17.4",
+    oneLine: "A non-overlapping triplet of mRNA that specifies one amino acid.",
+    explanation:
+      "Ribosomes read mRNA three bases at a time. Each triplet is a codon, and almost every codon specifies one amino acid. A few special codons mark the start of translation or signal it to stop.",
+  },
+  readingFrame: {
+    id: "readingFrame",
+    name: "Reading frame",
+    campbellRef: "Campbell Ch 17.1, 17.5",
+    oneLine: "The starting position that determines how mRNA is grouped into codons.",
+    explanation:
+      "Where translation begins decides how the rest of the message is grouped. Insertions or deletions that are not multiples of three shift the reading frame and change every downstream codon.",
+  },
+  ribosome: {
+    id: "ribosome",
+    name: "Ribosome",
+    campbellRef: "Campbell Ch 17.4",
+    oneLine: "The cellular machine that translates mRNA into a polypeptide.",
+    explanation:
+      "Ribosomes move along an mRNA, reading codons in order. Each codon is matched to its amino acid, which is added to a growing polypeptide chain until a stop codon is reached.",
+  },
+  aminoAcid: {
+    id: "aminoAcid",
+    name: "Amino acid",
+    campbellRef: "Campbell Ch 5.4, 17.1",
+    oneLine: "The building block of proteins.",
+    explanation:
+      "Twenty different amino acids combine in sequence to form polypeptides. The order of amino acids determines how the chain folds and what the protein does.",
+  },
+  polypeptide: {
+    id: "polypeptide",
+    name: "Polypeptide",
+    campbellRef: "Campbell Ch 17.4",
+    oneLine: "A chain of amino acids built by translation.",
+    explanation:
+      "A polypeptide is the direct product of translation. After folding (and sometimes joining other chains) it becomes a functional protein.",
+  },
+  silentMutation: {
+    id: "silentMutation",
+    name: "Silent mutation",
+    campbellRef: "Campbell Ch 17.5",
+    oneLine: "A base change that does not change the amino acid.",
+    explanation:
+      "Several codons can specify the same amino acid. A substitution that produces an alternate codon for the same amino acid leaves the protein unchanged.",
+  },
+  missenseMutation: {
+    id: "missenseMutation",
+    name: "Missense mutation",
+    campbellRef: "Campbell Ch 17.5",
+    oneLine: "A base change that swaps one amino acid for another.",
+    explanation:
+      "A missense mutation alters a codon so it codes for a different amino acid. Depending on which amino acid is swapped, the protein can keep working, work less well, or fail entirely.",
+  },
+  nonsenseMutation: {
+    id: "nonsenseMutation",
+    name: "Nonsense mutation",
+    campbellRef: "Campbell Ch 17.5",
+    oneLine: "A base change that creates a premature stop codon.",
+    explanation:
+      "A nonsense mutation turns an amino-acid codon into a stop codon. Translation halts early, producing a shortened polypeptide that usually cannot function.",
+  },
 };
 
 export const conceptList = (ids: string[]): ConceptRef[] =>

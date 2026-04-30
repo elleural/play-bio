@@ -10,6 +10,9 @@ import { BriefingLevel } from "../levels/BriefingLevel";
 import { DiscoveryLevel } from "../levels/DiscoveryLevel";
 import { BuildLevel } from "../levels/BuildLevel";
 import { RepairLevel } from "../levels/RepairLevel";
+import { CodonChunkingLevel } from "../levels/CodonChunkingLevel";
+import { RibosomeLevel } from "../levels/RibosomeLevel";
+import { MutationEffectLevel } from "../levels/MutationEffectLevel";
 import { conceptList } from "../content/concepts";
 import { LevelDef, LevelResult } from "../types";
 
@@ -23,15 +26,16 @@ const modeLabel = (def: LevelDef): string => {
       return "Build run";
     case "repair":
       return "Repair";
+    case "codon":
+      return "Codon chunking";
+    case "ribosome":
+      return "Ribosome workshop";
+    case "mutation-effect":
+      return "Mutation lab";
   }
 };
 
-const conceptIdsForLevel = (def: LevelDef): string[] => {
-  if (def.kind === "briefing") return def.conceptIds;
-  if (def.kind === "discovery") return def.conceptIds;
-  if (def.kind === "build") return def.conceptIds;
-  return def.conceptIds;
-};
+const conceptIdsForLevel = (def: LevelDef): string[] => def.conceptIds;
 
 const hintsForLevel = (def: LevelDef): string[] => {
   if (def.kind === "briefing") return [];
@@ -81,14 +85,7 @@ export const LevelScreen: React.FC = () => {
     advance();
   };
 
-  const successDebrief =
-    def.kind === "briefing"
-      ? def.successDebrief
-      : def.kind === "discovery"
-      ? def.successDebrief
-      : def.kind === "build"
-      ? def.successDebrief
-      : def.successDebrief;
+  const successDebrief = def.successDebrief;
 
   return (
     <View style={styles.root}>
@@ -180,6 +177,8 @@ const LevelBody: React.FC<{
   onComplete: (r: LevelResult) => void;
 }> = ({ def, resetCount, hintIndex, onComplete }) => {
   const key = `${def.id}-${resetCount}`;
+  // resetCount drives variant rotation for levels that support it.
+  const variantIndex = resetCount;
   if (def.kind === "briefing") {
     return <BriefingLevel key={key} level={def} onComplete={onComplete} />;
   }
@@ -203,12 +202,45 @@ const LevelBody: React.FC<{
       />
     );
   }
+  if (def.kind === "repair") {
+    return (
+      <RepairLevel
+        key={key}
+        level={def}
+        onComplete={onComplete}
+        hintIndex={hintIndex}
+      />
+    );
+  }
+  if (def.kind === "codon") {
+    return (
+      <CodonChunkingLevel
+        key={key}
+        level={def}
+        onComplete={onComplete}
+        hintIndex={hintIndex}
+        variantIndex={variantIndex}
+      />
+    );
+  }
+  if (def.kind === "ribosome") {
+    return (
+      <RibosomeLevel
+        key={key}
+        level={def}
+        onComplete={onComplete}
+        hintIndex={hintIndex}
+        variantIndex={variantIndex}
+      />
+    );
+  }
   return (
-    <RepairLevel
+    <MutationEffectLevel
       key={key}
       level={def}
       onComplete={onComplete}
       hintIndex={hintIndex}
+      variantIndex={variantIndex}
     />
   );
 };

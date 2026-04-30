@@ -24,31 +24,35 @@ export const IntroScreen: React.FC = () => {
         <Text style={styles.title}>Molecular Systems Lab</Text>
         <Text style={styles.subtitle}>
           You are running a small molecular lab. No biology background needed.
-          You will look at the building blocks of DNA, discover which pieces
-          stick together, build a strand, and clean up replication errors.
+          You will assemble a nucleotide, discover base pairing, replicate
+          and proofread DNA, transcribe a gene into RNA, and finally translate
+          mRNA into a small protein.
         </Text>
       </View>
 
       <View style={styles.row}>
         <Card style={styles.col}>
-          <Text style={styles.cardLabel}>1. Briefing</Text>
+          <Text style={styles.cardLabel}>1. Build & replicate</Text>
           <Text style={styles.cardBody}>
-            Look at a single nucleotide. Tap its parts to learn what each one
-            does. No quiz, just observation.
+            Assemble a nucleotide. Discover the A-T and G-C pairing rules in
+            the bond chamber. Run DNA polymerase and proofread to fix
+            mismatches.
           </Text>
         </Card>
         <Card style={styles.col}>
-          <Text style={styles.cardLabel}>2. Discovery</Text>
+          <Text style={styles.cardLabel}>2. Transcribe to RNA</Text>
           <Text style={styles.cardBody}>
-            Use the bond chamber to find out which bases stick together. The
-            chamber tells you when a pair is stable and when it is not.
+            Meet uracil (U): the base RNA uses where DNA uses thymine. Run RNA
+            polymerase to transcribe a gene, then see how a single mutation
+            changes the transcript.
           </Text>
         </Card>
         <Card style={styles.col}>
-          <Text style={styles.cardLabel}>3. Build and repair</Text>
+          <Text style={styles.cardLabel}>3. Translate to protein</Text>
           <Text style={styles.cardBody}>
-            Operate a polymerase to build a new strand using what you
-            discovered, then run a proofreading station to fix mismatches.
+            Lock the reading frame, run the ribosome, and watch a polypeptide
+            grow. Then label what a mutation does: silent, missense, or
+            nonsense.
           </Text>
         </Card>
       </View>
@@ -74,8 +78,9 @@ export const IntroScreen: React.FC = () => {
       </View>
 
       <Text style={styles.footnote}>
-        The game references Campbell Biology, 12e. Visuals are inspired by
-        textbook diagrams and are placeholder for prototype testing only.
+        The game references Campbell Biology, 12e (Ch 5, 16, 17). Visuals are
+        inspired by textbook diagrams and are placeholder for prototype
+        testing only.
       </Text>
     </ScrollView>
   );
