@@ -67,24 +67,26 @@ export const CodonChunkingLevel: React.FC<Props> = ({
     segments.length === totalCodons &&
     segments.every((s) => s.bases.length === 3);
 
+  // Auto-advance into the level success panel when the player has produced
+  // a valid frame. The effect intentionally depends only on `allValid` (and
+  // immutable refs/handlers) so calling setSolved(true) inside does not
+  // re-run the effect and cancel its own timeout. If the player breaks the
+  // frame before the timer fires, the cleanup will cancel cleanly.
   useEffect(() => {
-    if (allValid && !solved) {
-      setSolved(true);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      // Auto-advance to the level success panel (LevelScreen) without an
-      // intermediate per-level overlay that the player has to dismiss.
-      const t = setTimeout(() => {
-        const r: LevelResult = {
-          ...draftRef.current,
-          durationMs: Date.now() - startedAtRef.current,
-          hintsUsed: hintIndex + 1 > 0 ? hintIndex + 1 : 0,
-          completed: true,
-        };
-        onComplete(r);
-      }, 600);
-      return () => clearTimeout(t);
-    }
-  }, [allValid, solved, hintIndex, onComplete]);
+    if (!allValid) return;
+    setSolved(true);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    const t = setTimeout(() => {
+      const r: LevelResult = {
+        ...draftRef.current,
+        durationMs: Date.now() - startedAtRef.current,
+        hintsUsed: hintIndex + 1 > 0 ? hintIndex + 1 : 0,
+        completed: true,
+      };
+      onComplete(r);
+    }, 600);
+    return () => clearTimeout(t);
+  }, [allValid, hintIndex, onComplete]);
 
   const toggleCut = (boundary: number) => {
     if (solved) return;

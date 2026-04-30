@@ -272,10 +272,7 @@ const styles = StyleSheet.create({
   },
   successPanel: {
     ...StyleSheet.absoluteFillObject,
-    alignItems: "center",
-    justifyContent: "center",
     backgroundColor: "rgba(31,42,54,0.45)",
-    padding: 24,
     // Must sit above any per-level success scrim (those use zIndex 50).
     zIndex: 200,
     elevation: 30,
